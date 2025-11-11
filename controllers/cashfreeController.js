@@ -290,6 +290,8 @@ exports.withdrawFunds = async (req, res) => {
     };
 
     const response = await axios.request(options);
+    console.log("response", response);
+
     const { transfer_id, cf_transfer_id } = response.data;
     const newPayout = new payoutModel({
       userId: req.user.id,
