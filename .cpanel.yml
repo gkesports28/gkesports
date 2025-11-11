@@ -1,0 +1,9 @@
+---
+deployment:
+  tasks:
+    - export NODE_VERSION=nodejs20.16.2
+    - export APP_DIR=app  # Change this to your app's folder name inside your repo
+    - cd $APP_DIR
+    - /opt/cpanel/$NODE_VERSION/bin/npm install --production
+    - /opt/cpanel/$NODE_VERSION/bin/npm run build  
+    - /opt/cpanel/$NODE_VERSION/bin/npm run start

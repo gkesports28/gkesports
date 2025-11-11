@@ -1,0 +1,1 @@
+exports.imageUrl = "https://gk-esports-backend-b8b5535f397a.herokuapp.com/image"
