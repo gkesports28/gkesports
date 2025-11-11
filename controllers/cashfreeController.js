@@ -29,105 +29,32 @@ const clientId = process.env.PAYMENT_CLIENT_ID;
 const clientSecret = process.env.PAYMENT_CLIENT_SECRET;
 
 //Payout Client Id and Client Secret
-const PAYMENT_CLIENT_ID = process.env.PAYMENT_CLIENT_ID;
-const PAYMENT_CLIENT_SECRET = process.env.PAYMENT_CLIENT_SECRET;
 const PAYOUT_CLIENT_ID = process.env.PAYOUT_CLIENT_ID;
 const PAYOUT_CLIENT_SECRET = process.env.PAYOUT_CLIENT_SECRET;
 
-// Generate random order ID
+Cashfree.XClientId = clientId;
+Cashfree.XClientSecret = clientSecret;
+Cashfree.XEnvironment = Cashfree.Environment.PRODUCTION;
+
+//Generate Random OrderID
 function generateOrderId() {
   const uniqueId = crypto.randomBytes(16).toString("hex");
   const hash = crypto.createHash("sha256").update(uniqueId).digest("hex");
   return hash.substr(0, 12);
 }
+// Cashfreee Payout
+// const CASHFREE_WEBHOOK_SECRET = "YOUR_SECRET_KEY";
 
-exports.withdrawFunds = async (req, res) => {
-  const { transfer_amount, beneficiary_id } = req.body;
+// // Function to verify webhook signature
+// const verifySignature = (payload, signature) => {
+//     const expectedSignature = crypto
+//         .createHmac("sha256", CASHFREE_WEBHOOK_SECRET)
+//         .update(payload)
+//         .digest("base64");
 
-  try {
-    // Validate wallet
-    const userWallet = await walletModel.findOne({ userId: req.user.id });
-    if (!userWallet)
-      return res.json({ status: "failed", message: "Unable to get wallet" });
+//     return expectedSignature === signature;
+// };
 
-    if (userWallet.winningBalance < transfer_amount)
-      return res.json({
-        status: "failed",
-        message: "Wallet does not contain sufficient balance",
-      });
-
-    // Fetch user and beneficiary
-    const user = await LoginModule.findOne({ _id: req.user.id });
-    const beneficiary = user?.beneficiaries?.find(
-      (b) => b?.beneficiary_id?.toString() === beneficiary_id?.toString()
-    );
-    if (!beneficiary)
-      return res.json({ status: "failed", message: "Beneficiary not found" });
-
-    // Calculate payout & charges
-    const pgCharges = calculatePayoutCharges(transfer_amount);
-    const transferableAmount = transfer_amount - pgCharges;
-
-    // Prepare request body for Cashfree
-    const data = {
-      beneficiary_details: { beneficiary_id: beneficiary.beneficiary_id },
-      transfer_id: generateOrderId(),
-      transfer_amount: transferableAmount,
-      fundsource_id: "CF_WALLET",
-      transfer_mode: beneficiary.transfer_mode || "imps",
-    };
-
-    // ✅ Generate HMAC SHA256 signature (correct way)
-    const signature = crypto
-      .createHmac("sha256", PAYOUT_CLIENT_SECRET)
-      .update(JSON.stringify(data))
-      .digest("base64");
-
-    // Prepare request options
-    const options = {
-      method: "POST",
-      url: "https://payout-api.cashfree.com/payout/v1/transfers",
-      headers: {
-        accept: "application/json",
-        "x-api-version": "2024-01-01",
-        "content-type": "application/json",
-        "x-client-id": PAYOUT_CLIENT_ID,
-        "x-client-secret": PAYOUT_CLIENT_SECRET,
-        "x-signature": signature,
-      },
-      data,
-    };
-    // Call Cashfree API
-    const response = await axios.request(options);
-    const { transfer_id, cf_transfer_id } = response.data;
-
-    // Save payout record
-    const newPayout = new payoutModel({
-      userId: req.user.id,
-      transferId: transfer_id,
-      cfTransferId: cf_transfer_id,
-      amount: transferableAmount,
-      paymentMode: "imps",
-      pgCharges: pgCharges,
-    });
-
-    await newPayout.save();
-
-    // Update wallet balances
-    userWallet.winningBalance -= transfer_amount;
-    userWallet.balance -= transfer_amount;
-    await userWallet.save();
-
-    return res.json({
-      status: "success",
-      message: "Funds withdrawal request is processing.",
-    });
-  } catch (e) {
-    console.error("❌ WithdrawFunds Error:", e.message);
-    console.log("error", e);
-    res.json({ status: "failed", message: e.message });
-  }
-};
 //SDK Payout
 exports.payoutWebhook = async (req, res) => {
   try {
@@ -226,92 +153,95 @@ exports.payoutWebhook = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-// exports.withdrawFunds = async (req, res) => {
-//   const { transfer_amount, beneficiary_id } = req.body;
-//   console.log(
-//     transfer_amount,
-//     beneficiary_id,
-//     "transfer_amount,beneficiary_id"
-//   );
+exports.withdrawFunds = async (req, res) => {
+  const { transfer_amount, beneficiary_id } = req.body;
+  console.log(
+    transfer_amount,
+    beneficiary_id,
+    "transfer_amount,beneficiary_id"
+  );
 
-//   const transferableAmount =
-//     transfer_amount - calculatePayoutCharges(transfer_amount);
-//   const pgCharges = calculatePayoutCharges(transfer_amount);
-//   const userWallet = await walletModel.findOne({ userId: req.user.id });
-//   if (!userWallet)
-//     return res.json({ status: "failed", message: "Unable to get wallet" });
-//   if (userWallet.winningBalance < transfer_amount)
-//     return res.json({
-//       status: "failed",
-//       message: "Wallet does not contain sufficient balance",
-//     });
-//   try {
-//     const user = await LoginModule.findOne({ _id: req.user.id });
-//     console.log(user, "user");
-//     const beneficiary = user.beneficiaries.find(
-//       (beneficiary) =>
-//         beneficiary?.beneficiary_id.toString() == beneficiary_id.toString()
-//     );
-//     if (!beneficiary) {
-//       return res.json({ status: "failed", message: "Beneficiary not found" });
-//     }
-//     const data = {
-//       beneficiary_details: { beneficiary_id: beneficiary_id },
-//       transfer_id: generateOrderId(),
-//       transfer_amount: transferableAmount,
-//       fundsource_id: "CF_WALLET",
-//       transfer_mode: "imps",
-//     };
+  const transferableAmount =
+    transfer_amount - calculatePayoutCharges(transfer_amount);
+  const pgCharges = calculatePayoutCharges(transfer_amount);
+  const userWallet = await walletModel.findOne({ userId: req.user.id });
+  if (!userWallet)
+    return res.json({ status: "failed", message: "Unable to get wallet" });
+  if (userWallet.winningBalance < transfer_amount)
+    return res.json({
+      status: "failed",
+      message: "Wallet does not contain sufficient balance",
+    });
+  try {
+    const user = await LoginModule.findOne({ _id: req.user.id });
+    console.log(user, "user");
+    const beneficiary = user.beneficiaries.find(
+      (beneficiary) =>
+        beneficiary?.beneficiary_id.toString() == beneficiary_id.toString()
+    );
+    if (!beneficiary) {
+      return res.json({ status: "failed", message: "Beneficiary not found" });
+    }
+    console.log(beneficiary, "beneficiary");
+    const data = {
+      beneficiary_details: { beneficiary_id: beneficiary?.beneficiary_id },
+      transfer_id: generateOrderId(),
+      transfer_amount: transferableAmount,
+      fundsource_id: "CF_WALLET",
+      transfer_mode: beneficiary.transfer_mode || "imps",
+    };
+    const PUBLIC_KEY_PATH = path.join(__dirname, "../keys/", "public_key.pem"); // Path to the public key file
+    console.log(PUBLIC_KEY_PATH);
+    // Load the public key from the PEM file
+    const publicKey = fs.readFileSync(PUBLIC_KEY_PATH, "utf8");
 
-//     // ✅ Create signature (HMAC SHA256)
-//     const payload = JSON.stringify(data);
-//     const signature = crypto
-//       .createHmac("sha256", PAYOUT_CLIENT_SECRET)
-//       .update(payload)
-//       .digest("base64");
+    // Function to encrypt data with the public key
+    const encryptWithPublicKey = (data) => {
+      const buffer = Buffer.from(data, "utf8");
+      return crypto.publicEncrypt(publicKey, buffer).toString("base64");
+    };
+    const encryptedPayload = encryptWithPublicKey(JSON.stringify(data));
 
-//     const options = {
-//       method: "POST",
-//       url: "https://api.cashfree.com/payout/transfers",
-//       headers: {
-//         accept: "application/json",
-//         "x-api-version": "2024-01-01",
-//         "content-type": "application/json",
-//         "x-client-id": PAYOUT_CLIENT_ID,
-//         "x-client-secret": PAYOUT_CLIENT_SECRET,
-//         "x-signature": signature, // ✅ Correctly generated
-//       },
-//       data: data,
-//     };
+    const options = {
+      method: "POST",
+      url: "https://api.cashfree.com/payout/transfers",
+      headers: {
+        accept: "application/json",
+        "x-api-version": "2024-01-01",
+        "content-type": "application/json",
+        "x-client-id": PAYOUT_CLIENT_ID,
+        "x-client-secret": PAYOUT_CLIENT_SECRET,
+        "x-signature": encryptedPayload,
+      },
+      data: data,
+    };
 
-//     const response = await axios.request(options);
-//     console.log("response", response.data);
+    const response = await axios.request(options);
+    const { transfer_id, cf_transfer_id } = response.data;
+    const newPayout = new payoutModel({
+      userId: req.user.id,
+      transferId: transfer_id,
+      cfTransferId: cf_transfer_id,
+      amount: transferableAmount,
+      paymentMode: "imps",
+      pgCharges: pgCharges,
+    });
+    console.log(newPayout, "pat");
+    await newPayout.save();
+    const userWallet = await walletModel.findOne({ userId: req.user.id });
+    userWallet.winningBalance = userWallet.winningBalance - transfer_amount;
+    userWallet.balance = userWallet.balance - transfer_amount;
+    await userWallet.save();
 
-//     const { transfer_id, cf_transfer_id } = response.data;
-//     const newPayout = new payoutModel({
-//       userId: req.user.id,
-//       transferId: transfer_id,
-//       cfTransferId: cf_transfer_id,
-//       amount: transferableAmount,
-//       paymentMode: "imps",
-//       pgCharges: pgCharges,
-//     });
-//     console.log(newPayout, "pat");
-//     await newPayout.save();
-//     const userWallet = await walletModel.findOne({ userId: req.user.id });
-//     userWallet.winningBalance = userWallet.winningBalance - transfer_amount;
-//     userWallet.balance = userWallet.balance - transfer_amount;
-//     await userWallet.save();
-
-//     return res.json({
-//       status: "success",
-//       message: "Funds withdrawn request is being processing  ",
-//     });
-//   } catch (e) {
-//     console.log(e);
-//     res.json({ status: "failed", messge: e.message });
-//   }
-// };
+    return res.json({
+      status: "success",
+      message: "Funds withdrawn request is being processing  ",
+    });
+  } catch (e) {
+    console.log(e);
+    res.json({ status: "failed", messge: e.message });
+  }
+};
 
 // Cashfree Payment
 exports.createPaymentSession = async (req, res) => {
