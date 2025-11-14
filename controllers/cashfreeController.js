@@ -44,32 +44,33 @@ function generateOrderId() {
 }
 // Cashfreee Payout
 // const CASHFREE_WEBHOOK_SECRET = "YOUR_SECRET_KEY";
+const CASHFREE_WEBHOOK_SECRET = process.env.PAYOUT_WEBHOOK_SECRET;
 
-// // Function to verify webhook signature
-// const verifySignature = (payload, signature) => {
-//     const expectedSignature = crypto
-//         .createHmac("sha256", CASHFREE_WEBHOOK_SECRET)
-//         .update(payload)
-//         .digest("base64");
+// Function to verify webhook signature
+const verifySignature = (payload, signature) => {
+  const expectedSignature = crypto
+    .createHmac("sha256", CASHFREE_WEBHOOK_SECRET)
+    .update(payload)
+    .digest("base64");
 
-//     return expectedSignature === signature;
-// };
+  return expectedSignature === signature;
+};
 
 //SDK Payout
 exports.payoutWebhook = async (req, res) => {
   try {
-    // const signature = req.headers["x-webhook-signature"];
-    // const payload = JSON.stringify(req.body);
+    const signature = req.headers["x-webhook-signature"];
+    const payload = JSON.stringify(req.body);
 
-    // // Verify Cashfree signature
-    // const computedSignature = crypto
-    //   .createHmac("sha256", process.env.PAYOUT_WEBHOOK_SECRET)
-    //   .update(payload)
-    //   .digest("base64");
+    // Verify Cashfree signature
+    const computedSignature = crypto
+      .createHmac("sha256", process.env.PAYOUT_WEBHOOK_SECRET)
+      .update(payload)
+      .digest("base64");
 
-    // if (computedSignature !== signature) {
-    //     return res.status(401).json({ message: "Invalid Signature" });
-    // }
+    if (computedSignature !== signature) {
+      return res.status(401).json({ message: "Invalid Signature" });
+    }
 
     const { event, ...data } = req.body;
     console.log("Received Webhook Event:", event, data);
@@ -96,9 +97,9 @@ exports.payoutWebhook = async (req, res) => {
     }
 
     // Ensure the variables are defined before using them in the switch statement
-    // if (!userId || !amount) {
-    //     return res.status(400).json({ message: "Missing userId or amount" });
-    // }
+    if (!userId || !amount) {
+      return res.status(400).json({ message: "Missing userId or amount" });
+    }
 
     switch (event) {
       case "LOW_BALANCE_ALERT":
@@ -412,22 +413,26 @@ exports.verifyPayment = async (req, res) => {
 
 exports.paymentWebhook = async (req, res) => {
   try {
-    // const signature = req.headers["x-webhook-signature"];
-    // const timestamp = req.headers["x-webhook-timestamp"];
-    // const rawBody = JSON.stringify(req.body);
-    // console.log(rawBody,"signature,timestamp,rawBody")
-    // if(JSON.parse(rawBody)?.data?.test_object?.test_key)
-    //   return res.status(200).send("Testing Enviroment ");
-    // // Verify signature
-    // const dataToSign = timestamp + rawBody;
-    // const computedSignature = crypto
-    //   .createHmac("sha256", process.env.PAYMENT_WEBHOOK_SECRET)
-    //   .update(dataToSign)
-    //   .digest("base64");
-    // if (computedSignature !== signature) {
-    //   console.log("Signature Verification Failed",computedSignature,signature);
-    //   return res.status(400).send("Invalid signature");
-    // }
+    const signature = req.headers["x-webhook-signature"];
+    const timestamp = req.headers["x-webhook-timestamp"];
+    const rawBody = JSON.stringify(req.body);
+    console.log(rawBody, "signature,timestamp,rawBody");
+    if (JSON.parse(rawBody)?.data?.test_object?.test_key)
+      return res.status(200).send("Testing Enviroment ");
+    // Verify signature
+    const dataToSign = timestamp + rawBody;
+    const computedSignature = crypto
+      .createHmac("sha256", process.env.PAYMENT_WEBHOOK_SECRET)
+      .update(dataToSign)
+      .digest("base64");
+    if (computedSignature !== signature) {
+      console.log(
+        "Signature Verification Failed",
+        computedSignature,
+        signature
+      );
+      return res.status(400).send("Invalid signature");
+    }
     console.log(req.body, "req.body");
     const { data } = req.body;
     if (data?.test_object?.test_key) {

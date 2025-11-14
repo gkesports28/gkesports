@@ -22,7 +22,7 @@
   "dependencies": {
     "axios": "^1.8.4",
     "bcryptjs": "^2.4.3",
-    "cashfree-pg": "^5.1.0",
+    "cashfree-pg": "^4.2.3",
     "cashfree-sdk": "^0.1.1",
     "cloudinary": "^2.5.1",
     "cors": "^2.8.5",
@@ -40,10 +40,10 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "node-cron": "^3.0.3",
-    "nodemailer": "^7.0.10",
+    "nodemailer": "^6.10.0",
     "pm2": "^6.0.5",
     "streamifier": "^0.1.1",
-    "vercel": "^41.0.2"
+    "vercel": "^41.4.0"
   },
   "devDependencies": {
     "eslint": "^9.9.1",
