@@ -191,11 +191,7 @@ exports.withdrawFunds = async (req, res) => {
       fundsource_id: "CF_WALLET",
       transfer_mode: beneficiary.transfer_mode || "imps",
     };
-    const PUBLIC_KEY_PATH = path.join(
-      __dirname,
-      "../keys/",
-      "public_key_test.pem"
-    ); // Path to the public key file
+    const PUBLIC_KEY_PATH = path.join(__dirname, "../keys/", "public_key.pem"); // Path to the public key file
     console.log(PUBLIC_KEY_PATH);
     // Load the public key from the PEM file
     const publicKey = fs.readFileSync(PUBLIC_KEY_PATH, "utf8");
