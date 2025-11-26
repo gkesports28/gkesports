@@ -1,0 +1,77 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gk-esports-backend
+    restart: unless-stopped
+    ports:
+      - "${PORT:-8000}:8000"
+    environment:
+      - NODE_ENV=production
+      - PORT=8000
+      - MONGO_URI=mongodb+srv://gkmsinfotech:Gk7079207828%23@gkmsinfotech.2gbdhon.mongodb.net/GK-ESPORTS?retryWrites=true
+      - JWT_SECRET_KEY=aeiygrfsdt98o79
+      - PAYMENT_CLIENT_ID=115203c70e8dc385d50325f3d8302511
+      - PAYMENT_CLIENT_SECRET=cfsk_ma_prod_a41adc873168db9863f469a1b42c49dc_c778fb30
+      - SMTP_HOST=${SMTP_HOST:-}
+      - SMTP_PORT=${SMTP_PORT:-}
+      - EMAIL=gkmsinfotech@gmail.com
+      - EMAIL_PASSWORD=efokskolzellgjsy
+      - PAYOUT_CLIENT_ID=CF115203CTRNPUJNKH4S73A8EN7G
+      - PAYOUT_CLIENT_SECRET=cfsk_ma_prod_43f0bc8882a9b3417578fe1d719ed778_310808bc
+      - PAYMENT_WEBHOOK_SECRET=115203c70e8dc385d50325f3d8302511
+      - PAYOUT_WEBHOOK_SECRET=115203c70e8dc385d50325f3d8302511
+      - TEST_ID=CF115203D4BFC0SJV4VC73BM2UFG
+      - TEST_SECRET=cfsk_ma_prod_99a5d434cd107a42117c1329d2f09af9_63e1484e
+      - CRON_SECRET=${CRON_SECRET:-}
+      - DOMAIN_URL=https://gkmsinfotech.com
+    env_file:
+      - .env
+    volumes:
+      # Mount public/image directory to persist uploaded images
+      # Using named volume to avoid permission issues on macOS
+      # To use host directory instead, uncomment the line below and comment the named volume:
+      # - ./public/image:/app/public/image
+      - image_uploads:/app/public/image
+    networks:
+      - gk-esports-network
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "require('http').get('http://localhost:8000/', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})",
+        ]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+  # Optional: MongoDB service (uncomment if you want to run MongoDB in Docker)
+  # mongodb:
+  #   image: mongo:7
+  #   container_name: gk-esports-mongodb
+  #   restart: unless-stopped
+  #   ports:
+  #     - "27017:27017"
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=${MONGO_ROOT_USERNAME:-admin}
+  #     - MONGO_INITDB_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD:-password}
+  #   volumes:
+  #     - mongodb_data:/data/db
+  #   networks:
+  #     - gk-esports-network
+
+networks:
+  gk-esports-network:
+    driver: bridge
+
+volumes:
+  # Named volume for image uploads to avoid permission issues
+  image_uploads:
+# Uncomment if using MongoDB service
+# volumes:
+#   mongodb_data:
+

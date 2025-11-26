@@ -1,10 +1,10 @@
 const app = require("./app");
-const http = require('http');
+const http = require("http");
 const { mogodbUrlConnect } = require("./config/db");
-require('dotenv').config();
+require("dotenv").config();
 
 const server = http.createServer(app);
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 8001;
 
 (async () => {
   try {

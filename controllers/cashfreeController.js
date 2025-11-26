@@ -579,6 +579,7 @@ exports.paymentWebhook = async (req, res) => {
 
 // test cashfree payout
 
+// proper working with whitelist IP don't change
 exports.withdrawFunds = async (req, res) => {
   const { transfer_amount, beneficiary_id } = req.body;
 
@@ -615,7 +616,7 @@ exports.withdrawFunds = async (req, res) => {
       transfer_mode: beneficiary.transfer_mode || "imps",
     };
 
-    // ✅ Generate HMAC SHA256 signature (correct way)
+    //  Generate HMAC SHA256 signature (correct way)
     console.log({ PAYMENT_CLIENT_ID, PAYOUT_CLIENT_SECRET });
     const signature = await axios.post(
       "https://payout-api.cashfree.com/payout/v1/authorize",
