@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 8001;
 (async () => {
   try {
     await mogodbUrlConnect();
-    server.listen(PORT, () => {
+    server.listen(PORT, "0.0.0.0", () => {
       console.log(`NODE.JS Express Server listening on ${PORT}`);
     });
   } catch (error) {
