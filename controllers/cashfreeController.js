@@ -640,7 +640,7 @@ exports.withdrawFunds = async (req, res) => {
         "content-type": "application/json",
         "x-client-id": PAYOUT_CLIENT_ID,
         "x-client-secret": PAYOUT_CLIENT_SECRET,
-        Authorization: `${token}`,
+        Authorization: `Bearer ${token}`,
       },
       data,
     };

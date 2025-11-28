@@ -201,6 +201,169 @@ async function generateUniqueReferralCode() {
   return code;
 }
 
+// exports.signUp = async (req, res) => {
+//   const {
+//     firstName,
+//     lastName,
+//     userName,
+//     phoneNumber,
+//     email,
+//     password,
+//     state,
+//     referrerCode,
+//   } = req.body;
+
+//   try {
+//     // 1. Validate Required Fields
+//     if (
+//       !firstName ||
+//       !lastName ||
+//       !userName ||
+//       !phoneNumber ||
+//       !email ||
+//       !password ||
+//       !state
+//     ) {
+//       return res
+//         .status(400)
+//         .json({ status: "fail", message: "All fields are required" });
+//     }
+
+//     // 2. Check for Duplicate username, phone, email
+//     const [userNameExists, phoneNumberExists, emailAddressExists] =
+//       await Promise.all([
+//         LoginModule.findOne({ userName }),
+//         LoginModule.findOne({ phoneNumber }),
+//         LoginModule.findOne({ email }),
+//       ]);
+
+//     if (userNameExists)
+//       return res
+//         .status(400)
+//         .json({ status: "fail", message: "Username already taken" });
+//     if (phoneNumberExists)
+//       return res
+//         .status(400)
+//         .json({ status: "fail", message: "Mobile number already in use" });
+//     if (emailAddressExists)
+//       return res
+//         .status(400)
+//         .json({ status: "fail", message: "Email already in use" });
+
+//     // 3. Handle Referrer Code (if provided)
+//     let reffererId = null;
+//     let referrerWallet = null;
+
+//     if (referrerCode) {
+//       if (referrerCode.length === 7) {
+//         const referrer = await LoginModule.findOne({
+//           referralCode: referrerCode,
+//         });
+//         if (!referrer)
+//           return res
+//             .status(400)
+//             .json({ status: "fail", message: "Invalid Referrer Code" });
+//         reffererId = referrer._id;
+//         referrerWallet = await walletModel.findOne({ userId: reffererId });
+//       } else {
+//         const member = await memberModel.findOne({ memberCode: referrerCode });
+//         if (!member)
+//           return res
+//             .status(400)
+//             .json({ status: "fail", message: "Invalid Member Code" });
+//         reffererId = member._id;
+//       }
+//     }
+
+//     // 4. Prepare User Data
+//     const objData = {
+//       firstName,
+//       lastName,
+//       userName,
+//       phoneNumber,
+//       email: email.toLowerCase(),
+//       password,
+//       state,
+//       memberCode: randomWordCreator(),
+//       referredBy: reffererId || null,
+//     };
+
+//     // 5. Generate Unique Referral Code & Create User
+//     let user = null;
+//     let attempts = 0;
+
+//     while (!user && attempts < 5) {
+//       try {
+//         objData.referralCode = await generateUniqueReferralCode();
+//         user = await LoginModule.create(objData);
+//       } catch (err) {
+//         if (err.code === 11000 && err.keyPattern?.referralCode) {
+//           attempts++;
+//         } else {
+//           throw err;
+//         }
+//       }
+//     }
+
+//     if (!user) {
+//       return res.status(500).json({
+//         status: "error",
+//         message: "Failed to generate a unique referral code. Please try again.",
+//       });
+//     }
+
+//     // 6. Attach to Member (if applicable)
+//     if (referrerCode?.length !== 7) {
+//       const member = await memberModel.findOne({ memberCode: referrerCode });
+//       if (member) {
+//         member.members.push({ userId: user._id, amount: 0, gamePlay: 0 });
+//         await member.save();
+//         user.memberedBy = member._id;
+//       }
+//     }
+
+//     // 7. Create Wallet & WalletTransaction
+//     const [wallet, walletTransaction] = await Promise.all([
+//       walletModel.create({ userId: user._id }),
+//       walletTransactionModel.create({ userId: user._id }),
+//     ]);
+
+//     user.walletId = wallet._id;
+//     user.walletTransactionId = walletTransaction._id;
+
+//     // 8. Apply Referral Bonuses
+//     const referralSetting = await ReferralModel.findOne({});
+//     if (referralSetting && referrerCode) {
+//       const userWallet = await walletModel.findOne({ userId: user._id });
+
+//       if (userWallet) {
+//         userWallet.bonusBalance += referralSetting.newUserAmount || 0;
+//         await userWallet.save();
+//       }
+
+//       if (referrerWallet) {
+//         referrerWallet.bonusBalance += referralSetting.oldUserAmount || 0;
+//         await referrerWallet.save();
+//       }
+//     }
+
+//     await user.save();
+
+//     // 9. Success Response
+//     return res.status(201).json({
+//       status: "success",
+//       message: "Account Created Successfully",
+//       data: user,
+//     });
+//   } catch (error) {
+//     console.error("SignUp Error:", error);
+//     return res.status(500).json({
+//       status: "error",
+//       message: "An error occurred during user creation",
+//       error: error.message,
+//     });
+//   }
+// };
 exports.signUp = async (req, res) => {
   const {
     firstName,
@@ -313,7 +476,7 @@ exports.signUp = async (req, res) => {
     }
 
     // 6. Attach to Member (if applicable)
-    if (referrerCode?.length !== 7) {
+    if (referrerCode?.length !== 7 && referrerCode) {
       const member = await memberModel.findOne({ memberCode: referrerCode });
       if (member) {
         member.members.push({ userId: user._id, amount: 0, gamePlay: 0 });
@@ -331,20 +494,25 @@ exports.signUp = async (req, res) => {
     user.walletId = wallet._id;
     user.walletTransactionId = walletTransaction._id;
 
-    // 8. Apply Referral Bonuses
+    // 8. Apply Referral Bonuses or default bonus if no referral code
     const referralSetting = await ReferralModel.findOne({});
-    if (referralSetting && referrerCode) {
-      const userWallet = await walletModel.findOne({ userId: user._id });
 
+    if (referrerCode) {
+      // If user signed up with referral code
+      const userWallet = await walletModel.findOne({ userId: user._id });
       if (userWallet) {
-        userWallet.bonusBalance += referralSetting.newUserAmount || 0;
+        userWallet.bonusBalance += referralSetting?.newUserAmount || 0;
         await userWallet.save();
       }
 
       if (referrerWallet) {
-        referrerWallet.bonusBalance += referralSetting.oldUserAmount || 0;
+        referrerWallet.bonusBalance += referralSetting?.oldUserAmount || 0;
         await referrerWallet.save();
       }
+    } else {
+      // If user signed up without referral code, give ₹50 bonus
+      wallet.bonusBalance += 50;
+      await wallet.save();
     }
 
     await user.save();
