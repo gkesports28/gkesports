@@ -9,26 +9,18 @@ const CashFreePayoutRoute = require("./routes/cashfreePayoutRoutes");
 const { sendGlobalNotification } = require("./config/fcmConfig");
 // require("./scheduler/tournament");
 const app = express();
-const allowedOrigins = [
-  "http://localhost:5173",
-  "http://localhost:3000",
-  "https://esports.gamingkhel.com",
-  "https://admin.gkmsinfotech.com",
-  "https://gkmsinfotech.com",
-  "http://89.116.33.43",
-];
-
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: [
+  "Access-Control-Allow-Origin": [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://esports.gamingkhel.com",
+    "https://admin.gkmsinfotech.com",
+    "https://gkmsinfotech.com",
+    "http://89.116.33.43",
+  ],
+  "Access-Control-Allow-Credentials": true,
+  "Access-Control-Allow-Methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  "Access-Control-Allow-Headers": [
     "Origin",
     "X-Requested-With",
     "Content-Type",
@@ -36,7 +28,6 @@ const corsOptions = {
     "Authorization",
   ],
 };
-
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
