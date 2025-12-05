@@ -35,7 +35,9 @@ const PAYOUT_CLIENT_ID = process.env.TEST_ID;
 const PAYOUT_CLIENT_SECRET = process.env.TEST_SECRET;
 // const PAYOUT_CLIENT_ID = process.env.PAYOUT_CLIENT_ID;
 // const PAYOUT_CLIENT_SECRET = process.env.PAYOUT_CLIENT_SECRET;
-
+Cashfree.XClientId = process.env.PAYMENT_CLIENT_ID;
+Cashfree.XClientSecret = process.env.PAYMENT_CLIENT_SECRET;
+Cashfree.XEnvironment = Cashfree.Environment.PRODUCTION;
 // Generate random order ID
 function generateOrderId() {
   const uniqueId = crypto.randomBytes(16).toString("hex");
@@ -335,12 +337,11 @@ exports.createPaymentSession = async (req, res) => {
       order_amount: data.amount,
       order_currency: "INR",
     };
-
     Cashfree.PGCreateOrder("2023-08-01", objOrderData)
       .then(async (response) => {
-        console.log(response.data);
+        // console.log(response.data);
         if (response && response.data) {
-          console.log(response.data, "response.data");
+          // console.log(response.data, "response.data");
           await paymentModel.create({
             userId: userDetails._id,
             orderId: response.data.order_id,
@@ -348,6 +349,7 @@ exports.createPaymentSession = async (req, res) => {
             amount: data.amount,
             status: "pending",
           });
+          console.log("respojnse", response.data);
           return res.json(response.data);
         } else {
           return res.json({
@@ -357,7 +359,7 @@ exports.createPaymentSession = async (req, res) => {
         }
       })
       .catch((err) => {
-        console.error("Error from Cashfree:", err);
+        console.error("Error from Cashfree:", err.data);
         return res.json({
           status: "fail",
           message: "Error occurred while creating order",

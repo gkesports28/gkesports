@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Cashfree Payment Test (Based on Your Controller)</title>
+
+    <!-- Cashfree SDK -->
+    <script src="https://sdk.cashfree.com/js/v3/cashfree.js"></script>
+
+    <style>
+      body {
+        font-family: Arial;
+        padding: 30px;
+      }
+      input,
+      button {
+        padding: 12px;
+        font-size: 16px;
+        margin-top: 10px;
+        width: 330px;
+      }
+      button {
+        background: #4caf50;
+        border: none;
+        color: white;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #3c8d40;
+      }
+    </style>
+  </head>
+  <body>
+    <h2>Cashfree Payment Test (Backend Controller Flow)</h2>
+
+    <!-- Amount input -->
+    <label>Payment Amount</label><br />
+    <input type="number" id="amount" placeholder="Enter amount (e.g., 10)" />
+
+    <br /><br />
+    <button onclick="createSession()">Create Payment Session</button>
+
+    <br /><br />
+    <label>Payment Session ID</label><br />
+    <input type="text" id="sessionId" readonly />
+
+    <br /><br />
+    <button onclick="startPayment()">Pay Now</button>
+
+    <script>
+      const API_URL =
+        "http://localhost:8001/auth/v1/gk/payment/cashfree/create-payment-session";
+
+      // STEP 1 → Create session using your backend controller
+      async function createSession() {
+        const amount = document.getElementById("amount").value;
+
+        if (!amount) return alert("Enter amount first");
+
+        const token =
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3ZWFlZWQ2MGFiNDgzOGI3NmRiNjdjNCIsInVzZXJOYW1lIjoiR2siLCJpYXQiOjE3NjQ4NTAyNjR9.ZNZdb93-PyxPtqNoc_92dxdvNUz0iic8M18tS__sVOs";
+
+        if (!token) return alert("Token required!");
+
+        const res = await fetch(API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ amount: Number(amount) }),
+        });
+
+        const data = await res.json();
+        console.log("Session Response:", data);
+
+        if (data.payment_session_id) {
+          document.getElementById("sessionId").value = data.payment_session_id;
+          alert("Payment session created!");
+        } else {
+          alert("Failed: " + JSON.stringify(data));
+        }
+      }
+
+      // STEP 2 → Open Cashfree Checkout
+      function startPayment() {
+        const sessionId = document.getElementById("sessionId").value;
+
+        if (!sessionId) return alert("Create session first!");
+
+        const cashfree = Cashfree({ mode: "sandbox" }); // use production in live
+
+        cashfree.checkout({
+          paymentSessionId: sessionId,
+          redirectTarget: "_self",
+        });
+      }
+    </script>
+  </body>
+</html>

@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const LoginRoute = require("./routes/authRoutes");
 const EsportRoute = require("./routes/esportsRoutes");
 const CashFreePaymentRoute = require("./routes/cahfreePaymentRoutes");
@@ -8,18 +9,26 @@ const CashFreePayoutRoute = require("./routes/cashfreePayoutRoutes");
 const { sendGlobalNotification } = require("./config/fcmConfig");
 // require("./scheduler/tournament");
 const app = express();
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  "https://esports.gamingkhel.com",
+  "https://admin.gkmsinfotech.com",
+  "https://gkmsinfotech.com",
+  "http://89.116.33.43",
+];
+
 const corsOptions = {
-  "Access-Control-Allow-Origin": [
-    "http://localhost:5173",
-    "http://localhost:3000",
-    "https://esports.gamingkhel.com",
-    "https://admin.gkmsinfotech.com",
-    "https://gkmsinfotech.com",
-    "http://89.116.33.43",
-  ],
-  "Access-Control-Allow-Credentials": true,
-  "Access-Control-Allow-Methods": ["GET", "POST", "PUT", "DELETE"],
-  "Access-Control-Allow-Headers": [
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: [
     "Origin",
     "X-Requested-With",
     "Content-Type",
@@ -27,6 +36,7 @@ const corsOptions = {
     "Authorization",
   ],
 };
+
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -74,6 +84,9 @@ app.use("/auth/v1/gk/payout", CashFreePayoutRoute);
 //Example to handle 404
 app.get("/", (req, res, next) => {
   res.send("<h1>Server Running</h1>");
+});
+app.get("/test", (req, res, next) => {
+  res.sendFile(path.join(__dirname, "templates", "pay-test.html"));
 });
 app.use((req, res, next) => {
   res.status(404).send("Sorry can't find that!");
