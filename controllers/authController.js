@@ -1000,7 +1000,7 @@ exports.forgetOtp = async (req, res) => {
     }
 
     const otp = generateOTP(); // e.g., a 4 or 6 digit OTP
-    const otpExpiry = Date.now() + 60 * 1000; // 1 minute from now
+    const otpExpiry = Date.now() + 10 * 60 * 1000; // 10 minutes from now
 
     let user = await LoginModule.findOne({ phoneNumber: phone });
 
@@ -1013,8 +1013,8 @@ exports.forgetOtp = async (req, res) => {
 
     // Send SMS
     const apiUrl = `https://sms.autobysms.com/app/smsapi/index.php?key=45FA150E7D83D8&campaign=0&routeid=9&type=text&contacts=${phone}&senderid=SMSSPT&msg=Your OTP is ${otp} SELECTIAL&template_id=1707166619134631839`;
-
     const response = await axios.get(apiUrl); // Use GET not POST
+    console.log("response", response);
     console.log("SMS API Response:", response.data);
 
     if (response.data.type === "SUCCESS") {
