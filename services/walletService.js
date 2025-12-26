@@ -87,8 +87,8 @@ const deductFundService = async (userId, amount, description) => {
       throw new Error("Wallet not found");
     }
 
-    // Calculate max allowed bonus usage (15%)
-    const bonusUsageLimit = amount * 0.15;
+    // Calculate max allowed bonus usage (10%)
+    const bonusUsageLimit = Math.floor((amount * 10) / 100);
     const bonusToUse = Math.min(wallet.bonusBalance || 0, bonusUsageLimit);
 
     let remainingAmount = amount - bonusToUse;

@@ -191,7 +191,7 @@ exports.addJoinGameModel = async (req, res) => {
     console.log(error, "error join game");
     res.json({
       status: "failed",
-      message: "Server Issue",
+      message: "Insufficient balance",
       error,
     });
   }
