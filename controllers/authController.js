@@ -1059,7 +1059,7 @@ exports.vadlidateForgetMobileOTP = async (req, res) => {
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
-    if (moment().isAfter(moment(user.otpExpires))) {
+    if (moment().isAfter(moment(user.otpExpire))) {
       return res.status(400).json({ message: "OTP expired" });
     }
 
