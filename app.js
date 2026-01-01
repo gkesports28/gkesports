@@ -15,6 +15,7 @@ const corsOptions = {
     "http://localhost:3000",
     "https://esports.gamingkhel.com",
     "https://admin.gkmsinfotech.com",
+    "https://admin.gkmsinfotech.com/",
     "https://gkmsinfotech.com",
     "http://89.116.33.43",
   ],
