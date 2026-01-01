@@ -1,4 +1,6 @@
 const express = require("express");
+const multer = require("multer");
+const upload = multer();
 const {
   signUp,
   login,
@@ -22,6 +24,11 @@ const {
   adminSignup,
   adminLogin,
   sendCustomNotification,
+  addContactDetails,
+  addSliderController,
+  getAllSliders,
+  deleteSlider,
+  getContactDetails,
 } = require("../controllers/adminController");
 const {
   loginReferCode,
@@ -30,6 +37,7 @@ const {
   referUpdateRefer,
   getAllRefer,
 } = require("../controllers/referralController");
+
 const LoginRoute = express.Router();
 
 //Auth Route
@@ -75,5 +83,14 @@ LoginRoute.get("/refer-user", authmidleware, getAllRefer);
 LoginRoute.put("/refer", referUpdateRefer);
 LoginRoute.get("/refer-code", getReferCode);
 LoginRoute.get("/refer", authmidleware, loginReferCode);
-
+LoginRoute.post("/contact", authmidleware, addContactDetails);
+LoginRoute.post(
+  "/add-slider",
+  authmidleware,
+  upload.single("gameImage"),
+  addSliderController
+);
+LoginRoute.get("/get-details", getContactDetails);
+LoginRoute.get("/get-slider", getAllSliders);
+LoginRoute.delete("/delete-slider", deleteSlider);
 module.exports = LoginRoute;
