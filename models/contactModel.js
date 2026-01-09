@@ -9,7 +9,7 @@ const contactSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  manager_number: {
+  manager: {
     type: String,
     default: null,
   },

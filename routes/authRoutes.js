@@ -83,7 +83,7 @@ LoginRoute.get("/refer-user", authmidleware, getAllRefer);
 LoginRoute.put("/refer", referUpdateRefer);
 LoginRoute.get("/refer-code", getReferCode);
 LoginRoute.get("/refer", authmidleware, loginReferCode);
-LoginRoute.post("/contact", authmidleware, addContactDetails);
+LoginRoute.post("/contact", addContactDetails);
 LoginRoute.post(
   "/add-slider",
   authmidleware,

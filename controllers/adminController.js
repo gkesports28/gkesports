@@ -152,13 +152,12 @@ exports.addContactDetails = async (req, res) => {
 
     // Find existing settings (single document)
     let settings = await contactModel.findOne();
-    console.log("setting", settings);
+
     if (!settings) {
       // Create new document with dynamic key
       settings = await contactModel.create({
         [field]: value,
       });
-      console.log("second setting", settings);
     } else {
       // Update only that field
       await contactModel.findByIdAndUpdate(
@@ -166,7 +165,6 @@ exports.addContactDetails = async (req, res) => {
         { $set: { [field]: value } },
         { new: true }
       );
-      console.log("esle settings", settings);
     }
 
     return res.status(200).json({
